@@ -4,9 +4,16 @@
 using ReadStatus = FastqPairReader::ReadStatus;
 using Record = FastqPairReader::Record;
 
+/**
+ * @brief Construct a new Fastq Pair Reader object
+ * 
+ * @param r1_path read 1 fastq(.gz) path
+ * @param r2_path read 2 fastq(.gz) path
+ */
 FastqPairReader::FastqPairReader(const std::string &r1_path, const std::string &r2_path) {
-    _r1_path_ = r1_path;
-    _r2_path_ = r2_path;
+    _r1_path_ = r1_path; // store to private variable
+    _r2_path_ = r2_path; // store to private variable
+
     // Open R1/R2 in reading mode.
     // Note, HTSLib is written and C and requires
     // C strings, so we use `c_str()` to convert
@@ -23,6 +30,10 @@ FastqPairReader::FastqPairReader(const std::string &r1_path, const std::string &
     }
 }
 
+/**
+ * @brief Destroy the Fastq Pair Reader object
+ * 
+ */
 FastqPairReader::~FastqPairReader() {
     ks_free(&line_r1);
     ks_free(&line_r2);
@@ -59,6 +70,13 @@ FastqPairReader::~FastqPairReader() {
 
     Comparing the "core" of R1 and R2 lets us verify that the read is indeed a proper pair.
 */
+
+/**
+ * @brief extract the core header of a read file
+ * 
+ * @param header 
+ * @return std::string 
+ */
 std::string FastqPairReader::core_header(const std::string& header) {
     std::size_t space_pos = header.find(' ');
 
@@ -71,6 +89,12 @@ std::string FastqPairReader::core_header(const std::string& header) {
     return header.substr(0, space_pos);
 }
 
+/**
+ * @brief read next record from r1/r2.
+ * 
+ * @param pair struct which holds both r1/r2.
+ * @return ReadStatus fails if files are out of sync, core headers are different, etc.
+ */
 ReadStatus FastqPairReader::next_record(FastqPair &pair)
 {
     ReadStatus read_one = read_single_record(panel_r1, line_r1, pair.r1);
@@ -97,6 +121,14 @@ ReadStatus FastqPairReader::next_record(FastqPair &pair)
     return ReadStatus::OK;
 }
 
+/**
+ * @brief read a single record from r1 or r2. Used twice to get a full record.
+ * 
+ * @param file htsLib file pointer.
+ * @param line 
+ * @param record (1) header, (2) sequence, (3) pluses, (4) quality.
+ * @return ReadStatus 
+ */
 ReadStatus FastqPairReader::read_single_record(htsFile *file, kstring_t &line, Record &record) {
     // 1) HEADER
     int ret = hts_getline(file, '\n', &line);
@@ -151,6 +183,13 @@ ReadStatus FastqPairReader::read_single_record(htsFile *file, kstring_t &line, R
     return ReadStatus::OK;
 }
 
+/**
+ * @brief to string function for a record
+ * 
+ * @param os 
+ * @param rec 
+ * @return std::ostream& 
+ */
 std::ostream &operator<<(std::ostream &os, const FastqPairReader::Record &rec) {
     os << rec.header << '\n'
        << rec.sequence << '\n'
@@ -159,6 +198,13 @@ std::ostream &operator<<(std::ostream &os, const FastqPairReader::Record &rec) {
     return os;
 }
 
+/**
+ * @brief to string function for a r1/r2 pair
+ * 
+ * @param os 
+ * @param pair 
+ * @return std::ostream& 
+ */
 std::ostream &operator<<(std::ostream &os, const FastqPairReader::FastqPair &pair) {
     os << "R1\n" << pair.r1 << '\n'
        << "R2\n" << pair.r2;
