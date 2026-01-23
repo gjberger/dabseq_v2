@@ -25,6 +25,7 @@ int main(int argc, char **argv)
     {
         // Load cell barcode whitelist.
         BarcodeIndex cell_barcode_set(cell_barcodes_csv);
+        // Load antibody barcode whitelist.
         BarcodeIndex antibody_barcode_set(antibody_barcodes_csv);
 
         std::unordered_map<std::string, std::string> antibody_barcode_to_name = load_antibody_name_map(antibody_barcodes_csv);
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
         FastqPairReader::FastqPair pair;
 
         int printed_pairs = 0;
-        const int max_pairs = 10000000;
+        const int max_pairs = 10000;
         std::size_t num_with_barcodes = 0; // measure effectiveness of hamming dictionary
         std::size_t num_with_ab_payload = 0;
         std::size_t num_with_both = 0;
@@ -41,16 +42,12 @@ int main(int argc, char **argv)
         //                  cell_id     antibody, cnt
         std::unordered_map<std::string, std::unordered_map<std::string, std::size_t>> counts;
 
-        while (printed_pairs < max_pairs) // printed_pairs < max_pairs
+        while (printed_pairs < max_pairs)
         {
             FastqPairReader::ReadStatus status = reader.next_record(pair);
 
-            if (status == FastqPairReader::ReadStatus::END_OF_FILE)
-            {
-                break;
-            }
-            if (status == FastqPairReader::ReadStatus::READ_ERROR)
-            {
+            if (status == FastqPairReader::ReadStatus::END_OF_FILE) break;
+            if (status == FastqPairReader::ReadStatus::READ_ERROR) {
                 std::cerr << "Error: malformed or truncated FASTQ around pair\n";
                 return 1;
             }
@@ -59,29 +56,22 @@ int main(int argc, char **argv)
 
             ParsedAntibody antibody_barcode = parse_antibody_from_r2(pair.r2, antibody_barcode_set);
 
-            if (!cell_barcode.valid)
-            {
+            if (!cell_barcode.valid) {
                 // std::cout << "\nPair #" << printed_pairs + 1 << " → no valid barcode\n";
-            }
-            else
-            {
+            } else {
                 // std::cout << "\nPair #" << printed_pairs + 1 << '\n';
                 // std::cout << "Barcodes: bc1=" << cell_barcode.bc1 << " bc2=" << cell_barcode.bc2 << "\n";
                 num_with_barcodes++;
             }
 
-            if (!antibody_barcode.valid)
-            {
+            if (!antibody_barcode.valid) {
                 // std::cout << "Antibody barcode: NONE / INVALID \n";
-            }
-            else
-            {
+            } else {
                 // std::cout << "Antibody barcode (canonical 15 bp)\n" << antibody_barcode.barcode << "\n";
                 num_with_ab_payload++;
             }
 
-            if (cell_barcode.valid && antibody_barcode.valid)
-            {
+            if (cell_barcode.valid && antibody_barcode.valid) {
                 std::string cell_id = cell_barcode.bc1 + "_" + cell_barcode.bc2;
                 // std::cout << "Cell ID: " << cell_id << "\n";
                 num_with_both++;
@@ -97,13 +87,13 @@ int main(int argc, char **argv)
         std::cout << num_with_ab_payload << " have valid ab payloads\n";
         std::cout << num_with_both << " have both cell + ab\n";
 
-        /*
+        
         const std::size_t MIN_COUNT = 10;
         std::string out_dir = "cell_counts";
         fs::create_directories(out_dir);
 
         // Print through counts in map.
-        // std::cout << "\n cell_id     antibody_barcode     count\n";
+        std::cout << "\n cell_id     antibody_barcode     count\n";
         for (const auto &[cell_id, antibody_counts] : counts) {
 
             std::size_t kept_antibodies = 0;
@@ -135,7 +125,7 @@ int main(int argc, char **argv)
                 out << antibody_name << "," << count << "\n";
             }
         }
-        */
+        
     }
     catch (const std::exception &e)
     {
