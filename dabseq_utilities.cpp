@@ -11,6 +11,8 @@ AntibodyPayloadResult extract_ab_payload_from_r2(const std::string &seq) {
     // Try Total-seq second option.
     std::size_t pos5 = find_with_mismatches(seq, H5_AB_HANDLE, 1); // tolerance of 1
     std::size_t pos3b = find_with_mismatches(seq, H3B_AB_HANDLE, 1);
+    // MAYBE TRY CHECK FOR 3a?
+    // DOESN'T NEED TO BE WHOLE H3B
 
     if (pos5 != std::string::npos && pos3b != std::string::npos) {
         std::size_t payload_start = pos5 + H5_AB_HANDLE.size();

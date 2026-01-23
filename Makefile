@@ -33,7 +33,9 @@ $(TARGET): $(OBJS)
 
 
 run: $(TARGET)
-	./$(TARGET)
+	@echo "Start: $$(date +'%Y-%m-%d %H:%M:%S %Z')"
+	./$(TARGET) data/MB11_TS11_L004_R1_001.fastq.gz data/MB11_TS11_L004_R2_001.fastq.gz data/mb_cell_barcodes_v2.csv data/ab_barcodes.45plex_8.csv
+	@echo "End:   $$(date +'%Y-%m-%d %H:%M:%S %Z')"
 
 clean:
 	rm -f $(TARGET) $(OBJS)
