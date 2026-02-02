@@ -9,8 +9,8 @@ LDFLAGS = -L$(HTSLIB_PATH)/lib			# Allows linker to find `libhts.so` and `libhts
 
 LDLIBS = -lhts 							# Tells linker to link against hts library (installed in `/cbi/dabseq_v2/software`).
 
-TARGET = main
-SRCS = main.cpp fastq_reader.cpp barcode_index.cpp dabseq_utilities.cpp
+TARGET = main #main_orig
+SRCS = fastq_reader.cpp barcode_index.cpp dabseq_utilities.cpp main.cpp #main_orig.cpp #main.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # $< outputs the first prerequisite
